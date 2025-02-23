@@ -39,6 +39,9 @@ namespace Population3
         // A simple white texture for drawing rectangles.
         private Texture2D _whitePixel;
 
+        // HUD font.
+        private SpriteFont _hudFont;
+
         // Visualization layer for the gas grid.
         private VisualizationLayer _currentLayer = VisualizationLayer.Mass;
         private GamePadState _previousGamePadState;
@@ -76,7 +79,7 @@ namespace Population3
                 {
                     var cell = _gasGrid.GetCell(i, j);
 
-                    float mass = _random.NextSingle(EarlyUniverseGeneration.StarMass / 4.0f, EarlyUniverseGeneration.StarMass / 2.0f);
+                    float mass = _random.NextSingle(EarlyUniverseGeneration.StarMass / 2.0f, EarlyUniverseGeneration.StarMass / 1.0f);
                     cell.Mass = mass;
 
                     // Compute density using fixed cell volume.
@@ -104,6 +107,9 @@ namespace Population3
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             _whitePixel = new Texture2D(GraphicsDevice, 1, 1);
             _whitePixel.SetData(new[] { Color.White });
+
+            // Load the HUD font from your Content folder. Ensure you have a SpriteFont named "hudFont".
+            _hudFont = Content.Load<SpriteFont>("hudFont");
         }
 
         protected override void Update(GameTime gameTime)
@@ -145,6 +151,7 @@ namespace Population3
 
         protected override void Draw(GameTime gameTime)
         {
+            // Draw simulation with camera transform.
             GraphicsDevice.Clear(Color.Black);
             _spriteBatch.Begin(transformMatrix: _camera.Transform);
 
@@ -219,7 +226,77 @@ namespace Population3
             }
 
             _spriteBatch.End();
+
+            // Draw HUD in screen space (without camera transform).
+            _spriteBatch.Begin();
+
+            // Display the current layer name.
+            string layerName = "Layer: " + _currentLayer.ToString();
+            _spriteBatch.DrawString(_hudFont, layerName, new Vector2(10, 10), Color.White);
+
+            // Get current layer range.
+            GetCurrentLayerRange(out float minValueHUD, out float maxValueHUD);
+
+            // Create a gradient texture for the color scale.
+            int gradientBarWidth = 200;
+            int gradientBarHeight = 20;
+            Color[] gradientColors = new Color[gradientBarWidth * gradientBarHeight];
+            for (int x = 0; x < gradientBarWidth; x++)
+            {
+                float t = (float)x / (gradientBarWidth - 1);
+                float value = MathHelper.Lerp(minValueHUD, maxValueHUD, t);
+                Color color = MapFloatToColor(value, minValueHUD, maxValueHUD);
+                for (int y = 0; y < gradientBarHeight; y++)
+                {
+                    gradientColors[y * gradientBarWidth + x] = color;
+                }
+            }
+            Texture2D gradientTexture = new Texture2D(GraphicsDevice, gradientBarWidth, gradientBarHeight);
+            gradientTexture.SetData(gradientColors);
+            _spriteBatch.Draw(gradientTexture, new Rectangle(10, 40, gradientBarWidth, gradientBarHeight), Color.White);
+            gradientTexture.Dispose();
+
+            // Display min and max values.
+            string minText = "Min: " + minValueHUD.ToString("F2");
+            string maxText = "Max: " + maxValueHUD.ToString("F2");
+            _spriteBatch.DrawString(_hudFont, minText, new Vector2(10, 40 + gradientBarHeight + 5), Color.White);
+            Vector2 maxTextSize = _hudFont.MeasureString(maxText);
+            _spriteBatch.DrawString(_hudFont, maxText, new Vector2(10 + gradientBarWidth - maxTextSize.X, 40 + gradientBarHeight + 5), Color.White);
+
+            _spriteBatch.End();
+
             base.Draw(gameTime);
+        }
+
+        // Utility function to get the range for the current visualization layer.
+        private void GetCurrentLayerRange(out float minValue, out float maxValue)
+        {
+            float volume = _gasGrid.CellSize * _gasGrid.CellSize;
+            switch (_currentLayer)
+            {
+                case VisualizationLayer.Mass:
+                    minValue = 0f;
+                    maxValue = EarlyUniverseGeneration.StarMass;
+                    break;
+                case VisualizationLayer.Density:
+                    minValue = (EarlyUniverseGeneration.StarMass / 4f) / volume;
+                    maxValue = (EarlyUniverseGeneration.StarMass / 2f) / volume;
+                    break;
+                case VisualizationLayer.Temperature:
+                    minValue = 10f;
+                    maxValue = 30f;
+                    break;
+                case VisualizationLayer.Pressure:
+                    float minDensity = (EarlyUniverseGeneration.StarMass / 4f) / volume;
+                    float maxDensity = (EarlyUniverseGeneration.StarMass / 2f) / volume;
+                    minValue = minDensity * GameConstants.GasConstant * 10f;
+                    maxValue = maxDensity * GameConstants.GasConstant * 30f;
+                    break;
+                default:
+                    minValue = 0f;
+                    maxValue = 1f;
+                    break;
+            }
         }
 
         // Maps a float value to a heatmap color.

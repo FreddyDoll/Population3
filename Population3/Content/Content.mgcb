@@ -1,8 +1,8 @@
 
 #----------------------------- Global Properties ----------------------------#
 
-/outputDir:bin/$(Platform)
-/intermediateDir:obj/$(Platform)
+/outputDir:bin/Windows/Content
+/intermediateDir:obj/Windows/Content
 /platform:Windows
 /config:
 /profile:Reach
@@ -10,6 +10,14 @@
 
 #-------------------------------- References --------------------------------#
 
+/reference:"C:\Program Files\MonoGame\v3.8\Assemblies\Windows\MonoGame.Framework.Content.Pipeline.dll"
 
 #---------------------------------- Content ---------------------------------#
+
+#begin hudFont.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:hudFont.spritefont
 
