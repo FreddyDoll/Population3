@@ -16,6 +16,7 @@ namespace Population3
         public float Temperature;
         // Velocity vector for the gas in this cell.
         public Vector2 Velocity;
+        public Vector2 Acceleration;
 
         public GasCell()
         {
@@ -25,6 +26,7 @@ namespace Population3
             Pressure = 0f;
             Temperature = 300f; // room temperature
             Velocity = Vector2.Zero;
+            Acceleration = Vector2.Zero;
         }
     }
 }

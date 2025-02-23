@@ -80,7 +80,7 @@ namespace Population3
             }
             _kernelInitialized = true;
         }
-        private void ApplyLocalMassCorrection(GasCell[,] oldCells, int localRadius = 1)
+        private void ApplyLocalMassCorrection(GasCell[,] oldCells, int localRadius = 3)
         {
             // Create a temporary array to store the corrected cells.
             GasCell[,] correctedCells = new GasCell[Width, Height];
@@ -115,6 +115,7 @@ namespace Population3
                     correctedCells[i, j].Temperature = _cells[i, j].Temperature;
                     correctedCells[i, j].Pressure = _cells[i, j].Pressure;
                     correctedCells[i, j].Velocity = _cells[i, j].Velocity;
+                    correctedCells[i, j].Acceleration = _cells[i, j].Acceleration;
                 }
             }
 
@@ -170,7 +171,8 @@ namespace Population3
                         Temperature = cell.Temperature,
                         Velocity = cell.Velocity,
                         Mass = cell.Mass,
-                        Pressure = cell.Pressure
+                        Pressure = cell.Pressure,
+                        Acceleration = cell.Acceleration
                     };
                 }
             });
@@ -205,9 +207,10 @@ namespace Population3
                             gravitationalAcceleration += _gravKernel[di + _gravKernelRadius, dj + _gravKernelRadius] * neighborMass;
                         }
                     }
-
                     // Total acceleration is the pressure gradient contribution plus gravitational acceleration.
-                    Vector2 acceleration = (-pressureGradient / cell.Density) + gravitationalAcceleration*100.0f;
+                    Vector2 acceleration = (-pressureGradient / cell.Density) + gravitationalAcceleration * 1.0f;
+                    cell.Acceleration = gravitationalAcceleration*1.0f;
+
                     cell.Velocity += acceleration * deltaT;
                 }
             });
@@ -217,6 +220,18 @@ namespace Population3
 
             // 5. Apply a global mass correction to maintain mass conservation.
             ApplyLocalMassCorrection(oldCells);
+        }
+
+        public Vector2 GetGasAccelerationAt(Vector2 position)
+        {
+            // Convert world position to grid indices.
+            float relativeX = position.X + GameConstants.SimulationSize;
+            float relativeY = position.Y + GameConstants.SimulationSize;
+            int cellX = (int)(relativeX / CellSize);
+            int cellY = (int)(relativeY / CellSize);
+
+            // You could improve this using bilinear interpolation if needed.
+            return GetCell(cellX, cellY).Acceleration;
         }
 
         /// <summary>
@@ -274,6 +289,7 @@ namespace Population3
                     newCells[i, j].Temperature = interpTemperature;
                     newCells[i, j].Mass = interpMass;
                     newCells[i, j].Velocity = updatedCell.Velocity;
+                    newCells[i, j].Acceleration = updatedCell.Acceleration;
                 }
             });
 
