@@ -46,11 +46,11 @@ namespace Population3
         {
             _random = new Random(GameConstants.RandomSeed);
 
+            //_particles = GalaxyGeneration.Generate(GraphicsDevice, _random);
             _particles = EarlyUniverseGeneration.GeneratePointMasses(GraphicsDevice, _random);
-            _gasGrid = EarlyUniverseGeneration.GenerateGasGridCentral(_random);
-
-            // Instantiate the ParticleSimulation with the current bounds and particle list.
             _particleSimulator = new ParticleSimulator(_bounds);
+
+            _gasGrid = EarlyUniverseGeneration.GenerateGasGridCentral(_random);
 
             base.Initialize();
         }
@@ -68,16 +68,14 @@ namespace Population3
 
         protected override void Update(GameTime gameTime)
         {
-            float deltaT = GameConstants.FixedDeltaTime;
+            float deltaT = GameConstants.PhysicsTickTime;
             var gamePadState = GamePad.GetState(PlayerIndex.One);
 
             _camera.Update(gamePadState, GameConstants.ScreenWidth, GameConstants.ScreenHeight);
             _hud.Update(gamePadState);
 
-            // Delegate particle simulation update to the ParticleSimulation class.
-            _particleSimulator.Update(_particles,_gasGrid,deltaT);
-
-            _gasGrid.Update(deltaT);
+            var tree = _particleSimulator.Update(_particles,_gasGrid,deltaT);
+            _gasGrid.Update(tree ,deltaT);
 
             base.Update(gameTime);
         }
@@ -85,20 +83,20 @@ namespace Population3
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-            _spriteBatch.Begin(transformMatrix: _camera.Transform);
+            _spriteBatch.Begin(transformMatrix: _camera.CurrentTransform);
 
-            // Draw gas grid cells.
+            #region Draw GasGrid
             for (int i = 0; i < _gasGrid.Width; i++)
             {
                 for (int j = 0; j < _gasGrid.Height; j++)
                 {
                     GasCell cell = _gasGrid.GetCell(i, j);
-
+            
                     float propertyValue = 0f;
                     float minValue = 0f;
                     float maxValue = 0f;
                     float volume = _gasGrid.CellSize * _gasGrid.CellSize;
-
+            
                     switch (_hud.CurrentLayer)
                     {
                         case VisualizationLayer.Mass:
@@ -124,9 +122,9 @@ namespace Population3
                             maxValue = maxDensity * GameConstants.GasConstant * 30f;
                             break;
                     }
-
+            
                     Color cellColor = ColorMapping.FloatToColor(propertyValue, minValue, maxValue);
-
+            
                     Rectangle rect = new Rectangle(
                         (int)(-GameConstants.SimulationSize + i * _gasGrid.CellSize),
                         (int)(-GameConstants.SimulationSize + j * _gasGrid.CellSize),
@@ -135,8 +133,9 @@ namespace Population3
                     _spriteBatch.Draw(_whitePixel, rect, cellColor * GameConstants.GasGridAlpha);
                 }
             }
+            #endregion
 
-            // Draw particles.
+            #region Draw Particals
             foreach (var particle in _particles)
             {
                 if (particle.Merged)
@@ -156,6 +155,7 @@ namespace Population3
                     0f
                 );
             }
+            #endregion
 
             _spriteBatch.End();
 

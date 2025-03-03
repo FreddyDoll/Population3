@@ -34,7 +34,7 @@ namespace Population3
         // Game1 constants
         public const int GasGridWidth = 70;
         public const int GasGridHeight = 70;
-        public const float FixedDeltaTime = 0.01666f;
+        public const float PhysicsTickTime = 0.01666f;
         public const int GradientBarWidth = 200;
         public const int GradientBarHeight = 20;
         public const float HUDOffsetX = 10f;

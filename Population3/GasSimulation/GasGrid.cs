@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using Population3.Helpers;
 
 namespace Population3
 {
@@ -115,7 +116,7 @@ namespace Population3
                     correctedCells[i, j].Temperature = _cells[i, j].Temperature;
                     correctedCells[i, j].Pressure = _cells[i, j].Pressure;
                     correctedCells[i, j].Velocity = _cells[i, j].Velocity;
-                    correctedCells[i, j].Acceleration = _cells[i, j].Acceleration;
+                    correctedCells[i, j].LocalAccelerationFromGravity = _cells[i, j].LocalAccelerationFromGravity;
                 }
             }
 
@@ -143,7 +144,7 @@ namespace Population3
         /// Updates the gas simulation.
         /// </summary>
         /// <param name="deltaT">Time step.</param>
-        public void Update(float deltaT)
+        public void Update(PositionCache<PointMass> particleTree, float deltaT)
         {
             float simWidth = 2 * GameConstants.SimulationSize;
             float simHeight = 2 * GameConstants.SimulationSize;
@@ -172,7 +173,7 @@ namespace Population3
                         Velocity = cell.Velocity,
                         Mass = cell.Mass,
                         Pressure = cell.Pressure,
-                        Acceleration = cell.Acceleration
+                        LocalAccelerationFromGravity = cell.LocalAccelerationFromGravity
                     };
                 }
             });
@@ -207,11 +208,35 @@ namespace Population3
                             gravitationalAcceleration += _gravKernel[di + _gravKernelRadius, dj + _gravKernelRadius] * neighborMass;
                         }
                     }
-                    // Total acceleration is the pressure gradient contribution plus gravitational acceleration.
-                    Vector2 acceleration = (-pressureGradient / cell.Density) + gravitationalAcceleration * 1.0f;
-                    cell.Acceleration = gravitationalAcceleration*1.0f;
 
-                    cell.Velocity += acceleration * deltaT;
+                    // Get the world-space center of the cell.
+                    Vector2 cellCenter = _cellCenters[i, j];
+                    Vector2 accelFromGravityParticles = Vector2.Zero;
+
+                    // Query the tree for particles near the cell center.
+                    var neighbours = particleTree.GetInRadius(cellCenter, GameConstants.GravityNeighborRadius*3);
+
+                    // Sum up the gravitational acceleration contributions from each particle.
+                    foreach (var particle in neighbours)
+                    {
+                        // Compute the displacement vector using periodic (wrapped) distances.
+                        Vector2 disp = CoordinateWrapping.GetWrappedDifference(particleTree.WorldBounds,particle.Position, cellCenter);
+                        float rSquared = disp.LengthSquared();
+                        if (rSquared < GameConstants.MinimumDistanceSquared)
+                            rSquared = GameConstants.MinimumDistanceSquared;
+
+                        // Acceleration contribution: a = G * m / r^2 in the direction of disp.
+                        accelFromGravityParticles += Vector2.Normalize(disp) * (GameConstants.GravitationalConstant * particle.Mass / rSquared);
+                    }
+
+                    // Total acceleration is the pressure gradient contribution plus gravitational acceleration.
+                    Vector2 accele = (-pressureGradient / cell.Density) + accelFromGravityParticles + gravitationalAcceleration;
+                    //Vector2 accele = accelFromGravityParticles*100.0f;
+                    //Vector2 accele = Vector2.Zero;
+
+                    cell.LocalAccelerationFromGravity = gravitationalAcceleration;
+
+                    cell.Velocity += accele * deltaT;
                 }
             });
 
@@ -231,7 +256,7 @@ namespace Population3
             int cellY = (int)(relativeY / CellSize);
 
             // You could improve this using bilinear interpolation if needed.
-            return GetCell(cellX, cellY).Acceleration;
+            return GetCell(cellX, cellY).LocalAccelerationFromGravity;
         }
 
         /// <summary>
@@ -289,7 +314,7 @@ namespace Population3
                     newCells[i, j].Temperature = interpTemperature;
                     newCells[i, j].Mass = interpMass;
                     newCells[i, j].Velocity = updatedCell.Velocity;
-                    newCells[i, j].Acceleration = updatedCell.Acceleration;
+                    newCells[i, j].LocalAccelerationFromGravity = updatedCell.LocalAccelerationFromGravity;
                 }
             });
 

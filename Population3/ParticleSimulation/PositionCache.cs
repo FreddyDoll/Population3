@@ -96,12 +96,12 @@ namespace Population3
     public class PositionCache<T> where T : IHavePosition
     {
         private Quadtree<T> quadtree;
-        private readonly RectangleF worldBounds;
+        public RectangleF WorldBounds { get; init; }
         private readonly int capacityPerNode;
 
         public PositionCache(RectangleF worldBounds, int capacityPerNode = 4)
         {
-            this.worldBounds = worldBounds;
+            this.WorldBounds = worldBounds;
             this.capacityPerNode = capacityPerNode;
             quadtree = new Quadtree<T>(worldBounds, capacityPerNode);
         }
@@ -111,7 +111,7 @@ namespace Population3
         /// </summary>
         public void Build(IEnumerable<T> items)
         {
-            quadtree = new Quadtree<T>(worldBounds, capacityPerNode);
+            quadtree = new Quadtree<T>(WorldBounds, capacityPerNode);
             foreach (var item in items)
             {
                 quadtree.Insert(item);
@@ -129,26 +129,26 @@ namespace Population3
             quadtree.Query(position, radius, found);
 
             // Check for wrap-around in X.
-            if (position.X - radius < worldBounds.X)
-                quadtree.Query(new Vector2(position.X + worldBounds.Width, position.Y), radius, found);
-            if (position.X + radius > worldBounds.X + worldBounds.Width)
-                quadtree.Query(new Vector2(position.X - worldBounds.Width, position.Y), radius, found);
+            if (position.X - radius < WorldBounds.X)
+                quadtree.Query(new Vector2(position.X + WorldBounds.Width, position.Y), radius, found);
+            if (position.X + radius > WorldBounds.X + WorldBounds.Width)
+                quadtree.Query(new Vector2(position.X - WorldBounds.Width, position.Y), radius, found);
 
             // Check for wrap-around in Y.
-            if (position.Y - radius < worldBounds.Y)
-                quadtree.Query(new Vector2(position.X, position.Y + worldBounds.Height), radius, found);
-            if (position.Y + radius > worldBounds.Y + worldBounds.Height)
-                quadtree.Query(new Vector2(position.X, position.Y - worldBounds.Height), radius, found);
+            if (position.Y - radius < WorldBounds.Y)
+                quadtree.Query(new Vector2(position.X, position.Y + WorldBounds.Height), radius, found);
+            if (position.Y + radius > WorldBounds.Y + WorldBounds.Height)
+                quadtree.Query(new Vector2(position.X, position.Y - WorldBounds.Height), radius, found);
 
             // Check for corner cases.
-            if (position.X - radius < worldBounds.X && position.Y - radius < worldBounds.Y)
-                quadtree.Query(new Vector2(position.X + worldBounds.Width, position.Y + worldBounds.Height), radius, found);
-            if (position.X + radius > worldBounds.X + worldBounds.Width && position.Y - radius < worldBounds.Y)
-                quadtree.Query(new Vector2(position.X - worldBounds.Width, position.Y + worldBounds.Height), radius, found);
-            if (position.X - radius < worldBounds.X && position.Y + radius > worldBounds.Y + worldBounds.Height)
-                quadtree.Query(new Vector2(position.X + worldBounds.Width, position.Y - worldBounds.Height), radius, found);
-            if (position.X + radius > worldBounds.X + worldBounds.Width && position.Y + radius > worldBounds.Y + worldBounds.Height)
-                quadtree.Query(new Vector2(position.X - worldBounds.Width, position.Y - worldBounds.Height), radius, found);
+            if (position.X - radius < WorldBounds.X && position.Y - radius < WorldBounds.Y)
+                quadtree.Query(new Vector2(position.X + WorldBounds.Width, position.Y + WorldBounds.Height), radius, found);
+            if (position.X + radius > WorldBounds.X + WorldBounds.Width && position.Y - radius < WorldBounds.Y)
+                quadtree.Query(new Vector2(position.X - WorldBounds.Width, position.Y + WorldBounds.Height), radius, found);
+            if (position.X - radius < WorldBounds.X && position.Y + radius > WorldBounds.Y + WorldBounds.Height)
+                quadtree.Query(new Vector2(position.X + WorldBounds.Width, position.Y - WorldBounds.Height), radius, found);
+            if (position.X + radius > WorldBounds.X + WorldBounds.Width && position.Y + radius > WorldBounds.Y + WorldBounds.Height)
+                quadtree.Query(new Vector2(position.X - WorldBounds.Width, position.Y - WorldBounds.Height), radius, found);
 
             return found.Distinct().ToList();
         }

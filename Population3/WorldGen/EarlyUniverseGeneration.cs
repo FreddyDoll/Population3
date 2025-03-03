@@ -7,9 +7,9 @@ namespace Population3
 {
     public static class EarlyUniverseGeneration
     {
-        public const int StarTextureRadius = 400;
-        public const int StarParticleCount = 100;
-        public const float StarMass = 1000000f;
+        public const int StarTextureRadius = 40;
+        public const int StarParticleCount = 50;
+        public const float StarMass = 1000000000f;
         public const float StarDensity = 0.3f;
 
         public static GasGrid GenerateGasGridCentral(Random random)
@@ -53,10 +53,7 @@ namespace Population3
                     cell.Density = mass / volume;
                     cell.Temperature = random.NextSingle(10, 30);
                     cell.Pressure = cell.Density * GameConstants.GasConstant * cell.Temperature;
-                    cell.Velocity = new Vector2(
-                        (float)(random.NextDouble() * 2 - 1),
-                        (float)(random.NextDouble() * 2 - 1)
-                    );
+                    cell.Velocity = Vector2.One * 100000f;//Vector2.Zero;
                 }
             }
 
@@ -78,7 +75,7 @@ namespace Population3
                 {
                     var cell = gasGrid.GetCell(i, j);
 
-                    float mass = random.NextSingle(EarlyUniverseGeneration.StarMass / 20.0f, EarlyUniverseGeneration.StarMass / 1.0f);
+                    float mass = random.NextSingle(EarlyUniverseGeneration.StarMass / 2.0f, EarlyUniverseGeneration.StarMass / 1.0f);
                     cell.Mass = mass;
 
                     cell.Density = mass / volume;

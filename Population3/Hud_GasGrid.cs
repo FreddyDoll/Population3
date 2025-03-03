@@ -13,6 +13,9 @@ namespace Population3
         Pressure
     }
 
+    /// <summary>
+    /// Draws name and Legend of the GasGrid. Also stores it
+    /// </summary>
     public class Hud_GasGrid
     {
         public VisualizationLayer CurrentLayer { get; private set; }
@@ -61,6 +64,7 @@ namespace Population3
             GetCurrentLayerRange(out float minValueHUD, out float maxValueHUD);
 
             // Create gradient bar texture.
+            //TODO: this is not showing
             int gradientBarWidth = GameConstants.GradientBarWidth;
             int gradientBarHeight = GameConstants.GradientBarHeight;
             Color[] gradientColors = new Color[gradientBarWidth * gradientBarHeight];
@@ -74,6 +78,7 @@ namespace Population3
                     gradientColors[y * gradientBarWidth + x] = color;
                 }
             }
+
             // Use a temporary texture (dispose after drawing).
             using (Texture2D gradientTexture = new Texture2D(_graphicsDevice, gradientBarWidth, gradientBarHeight))
             {

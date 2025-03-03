@@ -10,13 +10,13 @@ namespace Population3
     {
         public Vector2 Position { get; set; }
         public float Zoom { get; set; }
-        public Matrix Transform { get; private set; }
+        public Matrix CurrentTransform { get; private set; }
 
         public Camera2D(Vector2 initialPosition, float initialZoom)
         {
             Position = initialPosition;
             Zoom = initialZoom;
-            Transform = Matrix.Identity;
+            CurrentTransform = Matrix.Identity;
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Population3
             }
 
             Vector2 screenCenter = new Vector2(screenWidth / 2, screenHeight / 2);
-            Transform = Matrix.CreateTranslation(new Vector3(Position, 0)) *
+            CurrentTransform = Matrix.CreateTranslation(new Vector3(Position, 0)) *
                         Matrix.CreateScale(Zoom) *
                         Matrix.CreateTranslation(new Vector3(screenCenter, 0));
         }
