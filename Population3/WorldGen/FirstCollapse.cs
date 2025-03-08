@@ -41,16 +41,16 @@ namespace Population3
                     mass *= maxDistance - distanceFromCenter;  // Mass decreases with distance
 
                     cell.Mass = mass;
-                    currentMass += cell.Mass;
+                    currentMass += (float)cell.Mass;
 
                     // Radial velocity example: inward flow towards center
-                    //Vector2 directionToCenter = new Vector2(-centerX, -centerY);
-                    //if (directionToCenter != Vector2.Zero)
-                    //    directionToCenter.Normalize();
+                    Vector2 directionToCenter = new Vector2(-centerX, -centerY);
+                    if (directionToCenter != Vector2.Zero)
+                        directionToCenter.Normalize();
 
                     // Velocity decreases with distance from center
-                    //float maxVelocity = 100000f;
-                    //cell.Velocity = directionToCenter * maxVelocity * (1 - normalizedDistance);
+                    //float maxVelocity = -0.2f * cellSize / GameConstants.PhysicsTickTime;
+                    //cell.Velocity = directionToCenter * maxVelocity;
                 }
             }
 
@@ -62,6 +62,7 @@ namespace Population3
                     var cell = gasGrid.GetCell(i, j);
                     cell.Mass *= fact;
 
+                    //cell.Velocity = Vector2.One * -0.2f * cellSize / GameConstants.PhysicsTickTime;
                     cell.Velocity = Vector2.Zero;
 
                     cell.Temperature = 100.0f;

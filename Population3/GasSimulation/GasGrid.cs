@@ -83,50 +83,6 @@ namespace Population3
             }
             _kernelInitialized = true;
         }
-        private void ApplyLocalMassCorrection(GasCell[,] oldCells, int localRadius = 3)
-        {
-            // Create a temporary array to store the corrected cells.
-            GasCell[,] correctedCells = new GasCell[Width, Height];
-
-            for (int i = 0; i < Width; i++)
-            {
-                for (int j = 0; j < Height; j++)
-                {
-                    float localMassOld = 0.0f;
-                    float localMassNew = 0.0f;
-
-                    // Sum the masses in the neighborhood defined by localRadius.
-                    for (int di = -localRadius; di <= localRadius; di++)
-                    {
-                        for (int dj = -localRadius; dj <= localRadius; dj++)
-                        {
-                            int ni = WrapIndex(i + di, Width);
-                            int nj = WrapIndex(j + dj, Height);
-                            localMassOld += oldCells[ni, nj].Mass;
-                            localMassNew += _cells[ni, nj].Mass;
-                        }
-                    }
-
-                    // Avoid division by zero.
-                    float localCorrection = localMassNew != 0.0f ? localMassOld / localMassNew : 1.0f;
-
-                    // Create a new cell with corrected mass.
-                    correctedCells[i, j] = new GasCell();
-                    correctedCells[i, j].Mass = _cells[i, j].Mass * localCorrection;
-                    correctedCells[i, j].Density = correctedCells[i, j].Mass / (CellSize * CellSize);
-                    // Optionally copy other properties.
-                    correctedCells[i, j].Temperature = _cells[i, j].Temperature;
-                    correctedCells[i, j].Pressure = _cells[i, j].Pressure;
-                    correctedCells[i, j].Velocity = _cells[i, j].Velocity;
-                    correctedCells[i, j].LocalAccelerationFromGravity = _cells[i, j].LocalAccelerationFromGravity;
-                }
-            }
-
-            // Replace the current grid with the corrected one.
-            _cells = correctedCells;
-        }
-
-
 
         // Helper method to wrap an index (periodic boundaries).
         private int WrapIndex(int index, int max)
@@ -142,11 +98,11 @@ namespace Population3
             return _cells[x, y];
         }
 
-        public (float minMass, float maxMass, float totalMass) GetMassStatsMass()
+        public (double minMass, double maxMass, double totalMass) GetMassStatsMass()
         {
-            float maxMass = float.MinValue;
-            float minMass = float.MaxValue;
-            float totalMass = 0;
+            double maxMass = double.MinValue;
+            double minMass = double.MaxValue;
+            double totalMass = 0;
             for (int i = 0; i < Width; i++)
             {
                 for (int j = 0; j < Height; j++)
@@ -198,8 +154,8 @@ namespace Population3
                     GasCell right = GetCell(i + 1, j);
                     GasCell up = GetCell(i, j - 1);
                     GasCell down = GetCell(i, j + 1);
-                    pressureGradient.X = (right.Pressure - left.Pressure) / (2 * CellSize);
-                    pressureGradient.Y = (down.Pressure - up.Pressure) / (2 * CellSize);
+                    pressureGradient.X = (float)(right.Pressure - left.Pressure) / (2 * CellSize);
+                    pressureGradient.Y = (float)(down.Pressure - up.Pressure) / (2 * CellSize);
 
                     // Compute gravitational acceleration using the precomputed kernel.
                     Vector2 gravitationalAcceleration = Vector2.Zero;
@@ -211,7 +167,7 @@ namespace Population3
                                 continue;
                             int ni = WrapIndex(i + di, Width);
                             int nj = WrapIndex(j + dj, Height);
-                            float neighborMass = _cells[ni, nj].Mass;
+                            float neighborMass = (float)_cells[ni, nj].Mass;
                             gravitationalAcceleration += _gravKernel[di + _gravKernelRadius, dj + _gravKernelRadius] * neighborMass;
                         }
                     }
@@ -221,7 +177,7 @@ namespace Population3
                     Vector2 accelFromGravityParticles = Vector2.Zero;
 
                     // Query the tree for particles near the cell center.
-                    var neighbours = particleTree.GetInRadius(cellCenter, GameConstants.GravityNeighborRadius*3);
+                    var neighbours = particleTree.GetInRadius(cellCenter, GameConstants.GravityNeighborRadius * 3);
 
                     // Sum up the gravitational acceleration contributions from each particle.
                     foreach (var particle in neighbours)
@@ -237,7 +193,7 @@ namespace Population3
                     }
 
                     // Total acceleration is the pressure gradient contribution plus gravitational acceleration.
-                    Vector2 accelFromPressure = (-pressureGradient / cell.Density);
+                    Vector2 accelFromPressure = (-pressureGradient / (float)cell.Density);
                     //Vector2 accele = accelFromPressure + accelFromGravityParticles + gravitationalAcceleration;
                     //Vector2 accele = accelFromGravityParticles*100.0f;
                     Vector2 accele = gravitationalAcceleration;
@@ -293,77 +249,84 @@ namespace Population3
         /// </summary>
         /// <param name="deltaT">Time step.</param>
         /// <param name="oldCells">Snapshot of the grid state before the velocity update.</param>
-
         private void Advect(float deltaT, GasCell[,] oldCells)
         {
             GasCell[,] newCells = new GasCell[Width, Height];
 
-            // Vorbereitungen für die Flussberechnung
-            float invCellSize = 1.0f / CellSize;
 
-            Parallel.For(0, Width, i =>
+            for (int i = 0; i < Width; i++)
             {
                 for (int j = 0; j < Height; j++)
                 {
                     newCells[i, j] = new GasCell();
-                    GasCell currentCell = oldCells[i, j];
-
-                    // Berechnung der Flüsse basierend auf Geschwindigkeit und Dichte
-                    Vector2 velocity = currentCell.Velocity;
-                    float density = currentCell.Density;
-                    float mass = currentCell.Mass;
-
-                    // Flüsse berechnen
-                    float fluxX = velocity.X * density * deltaT * invCellSize;
-                    float fluxY = velocity.Y * density * deltaT * invCellSize;
-
-                    // Verhindern von negativen Flüssen
-                    fluxX = Math.Clamp(fluxX, -mass, mass);
-                    fluxY = Math.Clamp(fluxY, -mass, mass);
-
-                    // Massenflüsse zu benachbarten Zellen verteilen
-                    int left = WrapIndex(i - 1, Width);
-                    int right = WrapIndex(i + 1, Width);
-                    int down = WrapIndex(j - 1, Height);
-                    int up = WrapIndex(j + 1, Height);
-
-                    // Berechnung der neuen Masse durch Flüsse
-                    float massIn = 0;
-                    float massOut = 0;
-
-                    if (fluxX > 0)
-                    {
-                        massIn += fluxX * oldCells[left, j].Mass;
-                        massOut += fluxX * mass;
-                    }
-                    else
-                    {
-                        massIn -= fluxX * mass;
-                        massOut -= fluxX * oldCells[right, j].Mass;
-                    }
-
-                    if (fluxY > 0)
-                    {
-                        massIn += fluxY * oldCells[i, down].Mass;
-                        massOut += fluxY * mass;
-                    }
-                    else
-                    {
-                        massIn -= fluxY * mass;
-                        massOut -= fluxY * oldCells[i, up].Mass;
-                    }
-
-                    // Aktualisieren der Zellenmasse und Dichte
-                    float newMass = mass + massIn - massOut;
-                    newMass = Math.Max(newMass, 0);  // Verhindern von negativen Massen
-
-                    newCells[i, j].Mass = newMass;
-                    newCells[i, j].Density = newMass / CellSize;
-                    newCells[i, j].Temperature = currentCell.Temperature;
-                    newCells[i, j].Velocity = currentCell.Velocity;
-                    newCells[i, j].LocalAccelerationFromGravity = currentCell.LocalAccelerationFromGravity;
                 }
-            });
+            }
+
+            //Parallel.For(0, Width, i =>
+            for (int i = 0; i < Width; i++)
+            {
+                try
+                {
+
+                    for (int j = 0; j < Height; j++)
+                    {
+                        GasCell updatedCell = _cells[i, j];
+                        // Compute the source position (in grid coordinates) based on the updated velocity.
+                        float srcX = i + 0.5f + (updatedCell.Velocity.X * deltaT) / CellSize;
+                        float srcY = j + 0.5f + (updatedCell.Velocity.Y * deltaT) / CellSize;
+
+                        var sampleX = (int)Math.Floor(srcX);
+                        var sampleY = (int)Math.Floor(srcY);
+
+                        double reldistanceSum = 0f;
+
+                        var maxDist = float.MinValue;
+
+                        for (int dx = -1; dx <= 1; dx++)
+                        {
+                            for (int dy = -1; dy <= 1; dy++)
+                            {
+                                var sdX = sampleX + dx;
+                                var sdY = sampleY + dy;
+                                var diffX = srcX - (sdX + 0.5f);
+                                var diffY = srcY - (sdY + 0.5f);
+                                float dist = (new Vector2(diffX, diffY)).Length();
+                                reldistanceSum += dist;
+                                if (maxDist < dist)
+                                    maxDist = dist;
+                            }
+                        }
+                        reldistanceSum = 9 * maxDist - reldistanceSum;
+
+                        for (int dx = -1; dx <= 1; dx++)
+                        {
+                            for (int dy = -1; dy <= 1; dy++)
+                            {
+                                var sdX = sampleX + dx;
+                                var sdY = sampleY + dy;
+
+                                var diffX = srcX - (sdX + 0.5f);
+                                var diffY = srcY - (sdY + 0.5f);
+                                float dist = (new Vector2(diffX, diffY)).Length();
+                                var targetCell = newCells[WrapIndex(sdX, Width), WrapIndex(sdY, Height)];
+
+                                float fact = (maxDist - dist) / (float)reldistanceSum;
+                                //targetCell.Velocity = (targetCell.Velocity * (float)targetCell.Mass + updatedCell.Velocity * (float)updatedCell.Mass * fact) / ((float)targetCell.Mass + (float)updatedCell.Mass * fact);
+                                targetCell.Mass += fact * updatedCell.Mass;
+
+                            }
+                        }
+
+                        newCells[i, j].Velocity = updatedCell.Velocity;
+                        newCells[i, j].LocalAccelerationFromGravity = updatedCell.LocalAccelerationFromGravity;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+
+                }
+            }//);
 
             _cells = newCells;
         }

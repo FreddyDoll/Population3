@@ -25,7 +25,7 @@ namespace Population3
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteFont _hudFont;
 
-        public float MaxMassPerCell { get; set; } = GameConstants.MaxMassPerCell;
+        public double MaxMassPerCell { get; set; } = GameConstants.MaxMassPerCell;
 
         public Hud_GasGrid(GasGrid gasGrid, GraphicsDevice graphicsDevice, SpriteFont hudFont)
         {
@@ -105,8 +105,9 @@ namespace Population3
                 Color.White);
         }
 
-        public void SelectPropertyFromCurrentLayer(GasCell cell, out float propertyValue)
+        public void SelectPropertyFromCurrentLayer(GasCell cell, out float p)
         {
+            var propertyValue = 0.0;
             switch (CurrentLayer)
             {
                 case VisualizationLayer.Mass:
@@ -125,6 +126,7 @@ namespace Population3
                     propertyValue = 0;
                     break;
             }
+            p = (float)propertyValue;
         }
 
         public void GetCurrentLayerRange(out float minValue, out float maxValue)
@@ -134,11 +136,11 @@ namespace Population3
             {
                 case VisualizationLayer.Mass:
                     minValue = 0f;
-                    maxValue = MaxMassPerCell;
+                    maxValue = (float)MaxMassPerCell;
                     break;
                 case VisualizationLayer.Density:
-                    minValue = MaxMassPerCell / volume;
-                    maxValue = MaxMassPerCell / volume;
+                    minValue = (float)MaxMassPerCell / volume;
+                    maxValue = (float)MaxMassPerCell / volume;
                     break;
                 case VisualizationLayer.Temperature:
                     minValue = 10f;
@@ -146,9 +148,9 @@ namespace Population3
                     break;
                 case VisualizationLayer.Pressure:
                     float minDensity = 0;
-                    float maxDensity = MaxMassPerCell / volume;
-                    minValue = minDensity * MaxMassPerCell * 10f;
-                    maxValue = maxDensity * MaxMassPerCell * 30f;
+                    float maxDensity = (float)MaxMassPerCell / volume;
+                    minValue = minDensity * (float)MaxMassPerCell * 10f;
+                    maxValue = maxDensity * (float)MaxMassPerCell * 30f;
                     break;
                 default:
                     minValue = 0f;

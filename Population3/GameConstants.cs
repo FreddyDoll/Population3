@@ -21,14 +21,14 @@ namespace Population3
         public const float ZoomOutFactor = 0.995f;
 
         // Simulation
-        public const float PhysicsTickTime = 0.05f; //million years
+        public const float PhysicsTickTime = 0.005f; //0.05 million years
         public const float SimulationHalfWidth = 2_000_000f; //milli Lightyears
 
         // Particle Sim
-        public const float GravitationalConstant = 1.0E+17f;
+        public const float GravitationalConstant = 1.0E+15f;
         public const float MinimumMassForQuadtree = 10.0f;
         public const float GravityNeighborRadius = 600000f;
-        public const float MinimumDistanceSquared = 1f;
+        public const float MinimumDistanceSquared = 100f;
 
         // Gas Grid
         public const float GasConstant = 1.0E-30f;

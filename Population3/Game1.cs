@@ -83,6 +83,29 @@ namespace Population3
             var tree = _particleSimulator.Update(_particles,_gasGrid,deltaT);
             _gasGrid.Update(tree ,deltaT);
 
+            for (int i = 0; i < _gasGrid.Width; i++)
+                for (int j= 0; j < _gasGrid.Height; j++)
+                {
+                    var c = _gasGrid.GetCell(i, j);
+                    var swap = 10.0;
+                    if ( c.Mass > swap)
+                    {
+                        var p = new PointMass
+                        {
+                            Mass = (float)c.Mass,
+                            Density = 0.00000001f,
+                            Position = new Vector2(
+                                (i + 0.5f) * _gasGrid.CellSize - GameConstants.SimulationHalfWidth, 
+                                (j + 0.5f) * _gasGrid.CellSize - GameConstants.SimulationHalfWidth
+                                ),
+                            Texture = WorldGen.GenHelpers.CreateFadingCircle(GraphicsDevice, Color.White, EarlyUniverseGeneration.StarTextureRadius),
+                            Velocity = c.Velocity,
+                        };
+                        c.Mass = 0;
+                        _particles.Add(p);
+                    }
+                }
+
             base.Update(gameTime);
         }
 

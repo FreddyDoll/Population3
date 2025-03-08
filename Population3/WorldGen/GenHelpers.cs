@@ -8,12 +8,14 @@ using System.Threading.Tasks;
 
 namespace Population3.WorldGen
 {
-    internal class Helpers
+    public class GenHelpers
     {
+
+
         /// <summary>
         /// Creates a texture representing a fading circle.
         /// </summary>
-        private static Texture2D CreateFadingCircle(GraphicsDevice graphicsDevice, Color color, int radius)
+        public static Texture2D CreateFadingCircle(GraphicsDevice graphicsDevice, Color color, int radius)
         {
             int diameter = radius * 2;
             Texture2D circleTexture = new Texture2D(graphicsDevice, diameter, diameter);

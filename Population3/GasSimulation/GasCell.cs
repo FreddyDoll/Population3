@@ -7,13 +7,13 @@ namespace Population3
     public class GasCell
     {
         // The mass contained in this cell.
-        public float Mass;
+        public double Mass;
         // Density (mass per unit volume; here, volume is implicitly 1 per cell)
-        public float Density;
+        public double Density;
         // Pressure in the cell.
-        public float Pressure;
+        public double Pressure;
         // Temperature in Kelvin.
-        public float Temperature;
+        public double Temperature;
         // Velocity vector for the gas in this cell.
         public Vector2 Velocity;
         public Vector2 LocalAccelerationFromGravity;
