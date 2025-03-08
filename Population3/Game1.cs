@@ -87,7 +87,7 @@ namespace Population3
                 for (int j= 0; j < _gasGrid.Height; j++)
                 {
                     var c = _gasGrid.GetCell(i, j);
-                    var swap = 10.0;
+                    var swap = 5.0;
                     if ( c.Mass > swap)
                     {
                         var p = new PointMass

@@ -9,7 +9,7 @@ namespace Population3
     {
         public const int StarTextureRadius = 40;
 
-        public const float TotalBarionicMass = 500; //Solar Masses 
+        public const float TotalBarionicMass = 1000; //Solar Masses 
 
         public static GasGrid GenerateGasGridCentral(Random random)
         {
@@ -60,10 +60,13 @@ namespace Population3
                 for (int j = 0; j < gridHeight; j++)
                 {
                     var cell = gasGrid.GetCell(i, j);
-                    cell.Mass *= fact;
+                    //cell.Mass *= fact;
 
-                    //cell.Velocity = Vector2.One * -0.2f * cellSize / GameConstants.PhysicsTickTime;
-                    cell.Velocity = Vector2.Zero;
+                    cell.Mass = 2.0f * (float)random.NextDouble() * TotalBarionicMass / (gridWidth * gridHeight);
+                    
+
+                    cell.Velocity = random.NextVectorRect() * -0.5f * cellSize / GameConstants.PhysicsTickTime;
+                    //cell.Velocity = Vector2.Zero;
 
                     cell.Temperature = 100.0f;
 

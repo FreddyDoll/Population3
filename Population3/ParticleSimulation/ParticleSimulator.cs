@@ -21,16 +21,17 @@ namespace Population3
         {
             // Build the spatial structure (quadtree or similar) for efficient neighbour queries.
             var tree = new PositionCache<PointMass>(_bounds);
-            tree.Build(particles.Where(p => p.Mass >= GameConstants.MinimumMassForQuadtree && !p.Merged));
+            tree.Build(particles.Where(p => !p.Merged));
 
-            ProcessCollisions(tree, particles);
+            while(ProcessCollisions(tree, particles));
             UpdatePhysics(tree, deltaT, particles, gasDistribution);
 
             return tree;
         }
 
-        private void ProcessCollisions(PositionCache<PointMass> treeForCollision, List<PointMass> particles)
+        private bool ProcessCollisions(PositionCache<PointMass> treeForCollision, List<PointMass> particles)
         {
+            var mergeHapend = false;
             var mergeEvents = new ConcurrentBag<(PointMass a, PointMass b)>();
 
             Parallel.For(0, particles.Count, i =>
@@ -64,13 +65,16 @@ namespace Population3
                     a.Velocity = mergedParticle.Velocity;
                     a.Density = mergedParticle.Density;
                     b.Merged = true;
+                    mergeHapend = true;
                 }
             }
+            return mergeHapend;
         }
 
         private void UpdatePhysics(PositionCache<PointMass> treeForGravity, float deltaT, List<PointMass> particles, GasGrid gasGrid)
         {
-            Parallel.For(0, particles.Count, i =>
+            //Parallel.For(0, particles.Count, i =>
+            for (int i = 0; i < particles.Count; i++)
             {
                 var particle = particles[i];
                 if (particle.Merged)
@@ -81,14 +85,14 @@ namespace Population3
 
                 // Get local gas acceleration and convert to force (F = m * a).
                 Vector2 gasAcceleration = gasGrid.GetGasAccelerationAt(particle.Position);
-                netForce += particle.Mass * gasAcceleration;
+                //netForce += particle.Mass * gasAcceleration;
 
                 // Apply the combined force to the particle.
                 particle.CurrentForce = netForce;
                 particle = particle.ApplyForceAndIntegrate(deltaT);
                 particle.Position = CoordinateWrapping.Wrap(_bounds, particle.Position);
                 particles[i] = particle;
-            });
+            }//);
         }
 
         private Vector2 AddGravityForces(PositionCache<PointMass> tree, PointMass particle)
@@ -97,7 +101,7 @@ namespace Population3
             var neighbours = tree.GetInRadius(particle.Position, GameConstants.GravityNeighborRadius);
             foreach (var neighbor in neighbours)
             {
-                if (particle.Equals(neighbor))
+                if (particle.Equals(neighbor) || neighbor.Merged)
                     continue;
 
                 Vector2 direction = CoordinateWrapping.GetWrappedDifference(_bounds, neighbor.Position, particle.Position);

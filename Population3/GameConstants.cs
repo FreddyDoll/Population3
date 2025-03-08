@@ -26,7 +26,6 @@ namespace Population3
 
         // Particle Sim
         public const float GravitationalConstant = 1.0E+15f;
-        public const float MinimumMassForQuadtree = 10.0f;
         public const float GravityNeighborRadius = 600000f;
         public const float MinimumDistanceSquared = 100f;
 
