@@ -16,13 +16,13 @@ namespace Population3
         {
             int gridWidth = GameConstants.GasGridWidth;
             int gridHeight = GameConstants.GasGridHeight;
-            float cellSize = (2 * GameConstants.SimulationSize) / gridWidth;
+            float cellSize = (2 * GameConstants.SimulationHalfWidth) / gridWidth;
             var gasGrid = new GasGrid(gridWidth, gridHeight, cellSize);
 
             float volume = cellSize * cellSize;
 
             // Define the central circle radius (adjust as needed)
-            float centralRadius = GameConstants.SimulationSize / 3.0f;
+            float centralRadius = GameConstants.SimulationHalfWidth / 3.0f;
 
             // Loop through each cell and assign properties based on distance from center.
             for (int i = 0; i < gridWidth; i++)
@@ -32,8 +32,8 @@ namespace Population3
                     var cell = gasGrid.GetCell(i, j);
 
                     // Compute cell center in world coordinates.
-                    float centerX = i * cellSize - GameConstants.SimulationSize + 0.5f * cellSize;
-                    float centerY = j * cellSize - GameConstants.SimulationSize + 0.5f * cellSize;
+                    float centerX = i * cellSize - GameConstants.SimulationHalfWidth + 0.5f * cellSize;
+                    float centerY = j * cellSize - GameConstants.SimulationHalfWidth + 0.5f * cellSize;
                     float distanceFromCenter = MathF.Sqrt(centerX * centerX + centerY * centerY);
 
                     // If the cell is within the central circle, assign a high mass; otherwise, assign a lower mass.
@@ -64,7 +64,7 @@ namespace Population3
         {
             int gridWidth = GameConstants.GasGridWidth;
             int gridHeight = GameConstants.GasGridHeight;
-            float cellSize = (2 * GameConstants.SimulationSize) / gridWidth;
+            float cellSize = (2 * GameConstants.SimulationHalfWidth) / gridWidth;
             var gasGrid = new GasGrid(gridWidth, gridHeight, cellSize);
 
             float volume = cellSize * cellSize;
@@ -102,7 +102,7 @@ namespace Population3
             {
                 var particle = new PointMass
                 {
-                    Position = random.NextVectorRect() * GameConstants.SimulationSize,
+                    Position = random.NextVectorRect() * GameConstants.SimulationHalfWidth,
                     Velocity = random.NextVectorRect() * 10000f,
                     Density = StarDensity,
                     Mass = StarMass,

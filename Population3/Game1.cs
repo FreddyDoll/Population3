@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +11,10 @@ namespace Population3
     public class Game1 : Game
     {
         private readonly RectangleF _bounds = new RectangleF(
-            -GameConstants.SimulationSize,
-            -GameConstants.SimulationSize,
-            2 * GameConstants.SimulationSize,
-            2 * GameConstants.SimulationSize);
+            -GameConstants.SimulationHalfWidth,
+            -GameConstants.SimulationHalfWidth,
+            2 * GameConstants.SimulationHalfWidth,
+            2 * GameConstants.SimulationHalfWidth);
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
@@ -47,10 +48,13 @@ namespace Population3
             _random = new Random(GameConstants.RandomSeed);
 
             //_particles = GalaxyGeneration.Generate(GraphicsDevice, _random);
-            _particles = EarlyUniverseGeneration.GeneratePointMasses(GraphicsDevice, _random);
-            _particleSimulator = new ParticleSimulator(_bounds);
+            //_particles = EarlyUniverseGeneration.GeneratePointMasses(GraphicsDevice, _random);
+            _particles = new();
 
-            _gasGrid = EarlyUniverseGeneration.GenerateGasGridCentral(_random);
+            _particleSimulator = new ParticleSimulator(_bounds);
+ 
+            _gasGrid = FirstCollapseGeneration.GenerateGasGridCentral(_random);
+
 
             base.Initialize();
         }
@@ -64,6 +68,8 @@ namespace Population3
             _hudFont = Content.Load<SpriteFont>("hudFont");
 
             _hud = new Hud_GasGrid(_gasGrid, GraphicsDevice, _hudFont);
+            var stats = _gasGrid.GetMassStatsMass();
+            _hud.MaxMassPerCell = stats.maxMass * 2.0f;
         }
 
         protected override void Update(GameTime gameTime)
@@ -86,48 +92,26 @@ namespace Population3
             _spriteBatch.Begin(transformMatrix: _camera.CurrentTransform);
 
             #region Draw GasGrid
+
+
             for (int i = 0; i < _gasGrid.Width; i++)
             {
                 for (int j = 0; j < _gasGrid.Height; j++)
                 {
                     GasCell cell = _gasGrid.GetCell(i, j);
             
-                    float propertyValue = 0f;
-                    float minValue = 0f;
-                    float maxValue = 0f;
-                    float volume = _gasGrid.CellSize * _gasGrid.CellSize;
-            
-                    switch (_hud.CurrentLayer)
-                    {
-                        case VisualizationLayer.Mass:
-                            propertyValue = cell.Mass;
-                            minValue = 0f;
-                            maxValue = EarlyUniverseGeneration.StarMass;
-                            break;
-                        case VisualizationLayer.Density:
-                            propertyValue = cell.Density;
-                            minValue = (EarlyUniverseGeneration.StarMass / 4f) / volume;
-                            maxValue = (EarlyUniverseGeneration.StarMass / 2f) / volume;
-                            break;
-                        case VisualizationLayer.Temperature:
-                            propertyValue = cell.Temperature;
-                            minValue = 10f;
-                            maxValue = 30f;
-                            break;
-                        case VisualizationLayer.Pressure:
-                            propertyValue = cell.Pressure;
-                            float minDensity = (EarlyUniverseGeneration.StarMass / 4f) / volume;
-                            float maxDensity = (EarlyUniverseGeneration.StarMass / 2f) / volume;
-                            minValue = minDensity * GameConstants.GasConstant * 10f;
-                            maxValue = maxDensity * GameConstants.GasConstant * 30f;
-                            break;
-                    }
-            
+                    float minValue;
+                    float maxValue;
+                    _hud.GetCurrentLayerRange(out minValue, out maxValue);
+
+                    float propertyValue;
+                    _hud.SelectPropertyFromCurrentLayer(cell, out propertyValue);
+
                     Color cellColor = ColorMapping.FloatToColor(propertyValue, minValue, maxValue);
             
                     Rectangle rect = new Rectangle(
-                        (int)(-GameConstants.SimulationSize + i * _gasGrid.CellSize),
-                        (int)(-GameConstants.SimulationSize + j * _gasGrid.CellSize),
+                        (int)(-GameConstants.SimulationHalfWidth + i * _gasGrid.CellSize),
+                        (int)(-GameConstants.SimulationHalfWidth + j * _gasGrid.CellSize),
                         (int)_gasGrid.CellSize,
                         (int)_gasGrid.CellSize);
                     _spriteBatch.Draw(_whitePixel, rect, cellColor * GameConstants.GasGridAlpha);

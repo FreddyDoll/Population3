@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using SharpDX.Direct3D9;
 
 namespace Population3
 {
@@ -23,6 +24,8 @@ namespace Population3
         private readonly GasGrid _gasGrid;
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteFont _hudFont;
+
+        public float MaxMassPerCell { get; set; } = GameConstants.MaxMassPerCell;
 
         public Hud_GasGrid(GasGrid gasGrid, GraphicsDevice graphicsDevice, SpriteFont hudFont)
         {
@@ -88,9 +91,10 @@ namespace Population3
                     Color.White);
             }
 
+            var stats = _gasGrid.GetMassStatsMass();
             // Draw min and max labels.
-            string minText = "Min: " + minValueHUD.ToString("F2");
-            string maxText = "Max: " + maxValueHUD.ToString("F2");
+            string minText = "Total: " + stats.totalMass.ToString("F2");
+            string maxText = "Max Mass: " + stats.maxMass.ToString("F2");
             spriteBatch.DrawString(_hudFont, minText,
                 new Vector2(GameConstants.HUDOffsetX, GameConstants.HUDOffsetY * 4 + gradientBarHeight + GameConstants.HUDOffsetY / 2),
                 Color.White);
@@ -101,28 +105,50 @@ namespace Population3
                 Color.White);
         }
 
-        private void GetCurrentLayerRange(out float minValue, out float maxValue)
+        public void SelectPropertyFromCurrentLayer(GasCell cell, out float propertyValue)
+        {
+            switch (CurrentLayer)
+            {
+                case VisualizationLayer.Mass:
+                    propertyValue = cell.Mass;
+                    break;
+                case VisualizationLayer.Density:
+                    propertyValue = cell.Density;
+                    break;
+                case VisualizationLayer.Temperature:
+                    propertyValue = cell.Temperature;
+                    break;
+                case VisualizationLayer.Pressure:
+                    propertyValue = cell.Pressure;
+                    break;
+                default: 
+                    propertyValue = 0;
+                    break;
+            }
+        }
+
+        public void GetCurrentLayerRange(out float minValue, out float maxValue)
         {
             float volume = _gasGrid.CellSize * _gasGrid.CellSize;
             switch (CurrentLayer)
             {
                 case VisualizationLayer.Mass:
                     minValue = 0f;
-                    maxValue = EarlyUniverseGeneration.StarMass;
+                    maxValue = MaxMassPerCell;
                     break;
                 case VisualizationLayer.Density:
-                    minValue = (EarlyUniverseGeneration.StarMass / 4f) / volume;
-                    maxValue = (EarlyUniverseGeneration.StarMass / 2f) / volume;
+                    minValue = MaxMassPerCell / volume;
+                    maxValue = MaxMassPerCell / volume;
                     break;
                 case VisualizationLayer.Temperature:
                     minValue = 10f;
                     maxValue = 30f;
                     break;
                 case VisualizationLayer.Pressure:
-                    float minDensity = (EarlyUniverseGeneration.StarMass / 4f) / volume;
-                    float maxDensity = (EarlyUniverseGeneration.StarMass / 2f) / volume;
-                    minValue = minDensity * GameConstants.GasConstant * 10f;
-                    maxValue = maxDensity * GameConstants.GasConstant * 30f;
+                    float minDensity = 0;
+                    float maxDensity = MaxMassPerCell / volume;
+                    minValue = minDensity * MaxMassPerCell * 10f;
+                    maxValue = maxDensity * MaxMassPerCell * 30f;
                     break;
                 default:
                     minValue = 0f;

@@ -46,7 +46,7 @@ namespace Population3
 
             // Define the center of the simulation and disk radius.
             Vector2 center = Vector2.Zero;
-            float diskRadius = GameConstants.SimulationSize / 2f;
+            float diskRadius = GameConstants.SimulationHalfWidth / 2f;
 
             // Create the central massive object (e.g., a black hole).
             PointMass centralBlackHole = new PointMass
