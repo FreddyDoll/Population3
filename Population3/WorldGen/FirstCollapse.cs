@@ -65,7 +65,7 @@ namespace Population3
                     cell.Mass = 2.0f * (float)random.NextDouble() * TotalBarionicMass / (gridWidth * gridHeight);
                     
 
-                    cell.Velocity = random.NextVectorRect() * -0.5f * cellSize / GameConstants.PhysicsTickTime;
+                    cell.Velocity = random.NextVectorRect() * -0.2f * cellSize / GameConstants.PhysicsTickTime;
                     //cell.Velocity = Vector2.Zero;
 
                     cell.Temperature = 100.0f;
