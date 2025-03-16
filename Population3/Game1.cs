@@ -68,8 +68,9 @@ namespace Population3
             _hudFont = Content.Load<SpriteFont>("hudFont");
 
             _hud = new Hud_GasGrid(_gasGrid, GraphicsDevice, _hudFont);
+            
             var stats = _gasGrid.GetMassStatsMass();
-            _hud.MaxMassPerCell = stats.maxMass * 2.0f;
+            _hud.MaxMassPerCell = GameConstants.MaxMassPerCell;
         }
 
         protected override void Update(GameTime gameTime)
@@ -87,19 +88,18 @@ namespace Population3
                 for (int j= 0; j < _gasGrid.Height; j++)
                 {
                     var c = _gasGrid.GetCell(i, j);
-                    var swap = 5.0;
-                    if ( c.Mass > swap)
+                    if ( c.Mass > GameConstants.MaxMassPerCell)
                     {
                         var p = new PointMass
                         {
                             Mass = (float)c.Mass,
-                            Density = 0.00000001f,
+                            Density = 0.0000001f,
                             Position = new Vector2(
                                 (i + 0.5f) * _gasGrid.CellSize - GameConstants.SimulationHalfWidth, 
                                 (j + 0.5f) * _gasGrid.CellSize - GameConstants.SimulationHalfWidth
                                 ),
                             Texture = WorldGen.GenHelpers.CreateFadingCircle(GraphicsDevice, Color.White, EarlyUniverseGeneration.StarTextureRadius),
-                            Velocity = c.Velocity,
+                            Velocity = 0.02f * c.Velocity, //TODO: Better solution for fixed factor
                         };
                         c.Mass = 0;
                         _particles.Add(p);

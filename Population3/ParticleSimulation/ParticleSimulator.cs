@@ -78,7 +78,7 @@ namespace Population3
             {
                 var particle = particles[i];
                 if (particle.Merged)
-                    return;
+                    continue;
 
                 // Existing gravitational force from nearby particles.
                 Vector2 netForce = AddGravityForces(treeForGravity, particle);

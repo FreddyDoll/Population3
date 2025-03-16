@@ -45,7 +45,6 @@ Population3 is a C# game project using MonoGame that simulates the early univers
 
 # Issues
 
-- Freezing of particles after merges
 - Simulation looks ok but does not scale too well
 
 # GameLoop

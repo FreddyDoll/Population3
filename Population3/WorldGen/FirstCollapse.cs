@@ -9,7 +9,7 @@ namespace Population3
     {
         public const int StarTextureRadius = 40;
 
-        public const float TotalBarionicMass = 1000; //Solar Masses 
+        public const float TotalBarionicMass = 10000; //Solar Masses 
 
         public static GasGrid GenerateGasGridCentral(Random random)
         {
