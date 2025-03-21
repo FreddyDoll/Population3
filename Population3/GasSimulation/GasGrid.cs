@@ -196,7 +196,7 @@ namespace Population3
                     Vector2 accelFromPressure = (-pressureGradient / (float)cell.Density);
                     //Vector2 accele = accelFromPressure + accelFromGravityParticles + gravitationalAcceleration;
                     //Vector2 accele = accelFromGravityParticles*100.0f;
-                    Vector2 accele = gravitationalAcceleration;
+                    Vector2 accele = gravitationalAcceleration + accelFromPressure + accelFromGravityParticles;
 
                     cell.LocalAccelerationFromGravity = gravitationalAcceleration;
 
@@ -224,11 +224,7 @@ namespace Population3
                 }
             });
 
-            // 4. Advect scalar properties using bilinear interpolation.
             Advect(deltaT, oldCells);
-
-            // 5. Apply a global mass correction to maintain mass conservation.
-            //ApplyLocalMassCorrection(oldCells);
         }
 
         public Vector2 GetGasAccelerationAt(Vector2 position)
@@ -311,9 +307,15 @@ namespace Population3
                                 var targetCell = newCells[WrapIndex(sdX, Width), WrapIndex(sdY, Height)];
 
                                 float fact = (maxDist - dist) / (float)reldistanceSum;
-                                //targetCell.Velocity = (targetCell.Velocity * (float)targetCell.Mass + updatedCell.Velocity * (float)updatedCell.Mass * fact) / ((float)targetCell.Mass + (float)updatedCell.Mass * fact);
-                                targetCell.Mass += fact * updatedCell.Mass;
 
+                                targetCell.Mass += fact * updatedCell.Mass;
+                                if (((float)targetCell.Mass + (float)updatedCell.Mass * fact) > 0.3)
+                                { 
+                                    //targetCell.Velocity = (targetCell.Velocity * (float)targetCell.Mass + updatedCell.Velocity * (float)updatedCell.Mass * fact) / ((float)targetCell.Mass + (float)updatedCell.Mass * fact);
+                                    targetCell.Pressure = (targetCell.Pressure * (float)targetCell.Mass + updatedCell.Pressure * (float)updatedCell.Mass * fact) / ((float)targetCell.Mass + (float)updatedCell.Mass * fact);
+                                    targetCell.Temperature = (targetCell.Temperature * (float)targetCell.Mass + updatedCell.Temperature * (float)updatedCell.Mass * fact) / ((float)targetCell.Mass + (float)updatedCell.Mass * fact);
+                                }
+                                targetCell.Density = targetCell.Mass / CellSize / CellSize;
                             }
                         }
 

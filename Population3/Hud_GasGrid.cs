@@ -139,7 +139,7 @@ namespace Population3
                     maxValue = (float)MaxMassPerCell;
                     break;
                 case VisualizationLayer.Density:
-                    minValue = (float)MaxMassPerCell / volume;
+                    minValue = 0;
                     maxValue = (float)MaxMassPerCell / volume;
                     break;
                 case VisualizationLayer.Temperature:

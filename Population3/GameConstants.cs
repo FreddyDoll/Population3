@@ -30,7 +30,7 @@ namespace Population3
         public const float MinimumDistanceSquared = 100f;
 
         // Gas Grid
-        public const float GasConstant = 1.0E-30f;
+        public const float GasConstant = 1.0E+3f;
         public const float MaxMassPerCell = 30; //Solar Masses
         public const int GasGridWidth = 100;
         public const int GasGridHeight = 100;
