@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 
 namespace Population3
 {
@@ -27,6 +28,11 @@ namespace Population3
             Temperature = 300f; // room temperature
             Velocity = Vector2.Zero;
             LocalAccelerationFromGravity = Vector2.Zero;
+        }
+
+        internal void ApplyImpulse(Vector2 impulse)
+        {
+            Velocity += impulse / (float)Mass;
         }
     }
 }

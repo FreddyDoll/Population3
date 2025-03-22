@@ -27,21 +27,33 @@ namespace Population3
             if (gamePadState.IsConnected)
             {
                 Vector2 rightStick = gamePadState.ThumbSticks.Right;
-                var p = Position;
-                p.X -= rightStick.X * GameConstants.CameraMoveSpeed / Zoom;
-                p.Y += rightStick.Y * GameConstants.CameraMoveSpeed / Zoom;
-                Position = p;
 
-                if (gamePadState.Buttons.RightShoulder == ButtonState.Pressed)
-                    Zoom *= GameConstants.ZoomInFactor;
-                if (gamePadState.Buttons.LeftShoulder == ButtonState.Pressed)
-                    Zoom *= GameConstants.ZoomOutFactor;
+                // Update camera position
+                Position -= new Vector2(rightStick.X, -rightStick.Y) * (GameConstants.CameraMoveSpeed / Zoom);
+
+                // Zoom using triggers LT/RT
+                float zoomChange = gamePadState.Triggers.Right - gamePadState.Triggers.Left;
+
+                Zoom *= MathHelper.Lerp(1f, GameConstants.ZoomInFactor, zoomChange);
+                Zoom *= MathHelper.Lerp(1f, GameConstants.ZoomOutFactor, -zoomChange);
+
             }
 
-            Vector2 screenCenter = new Vector2(screenWidth / 2, screenHeight / 2);
-            CurrentTransform = Matrix.CreateTranslation(new Vector3(Position, 0)) *
-                        Matrix.CreateScale(Zoom) *
-                        Matrix.CreateTranslation(new Vector3(screenCenter, 0));
+            Vector2 screenCenter = new Vector2(screenWidth / 2f, screenHeight / 2f);
+            CurrentTransform =
+                Matrix.CreateTranslation(Position.X, Position.Y, 0) *
+                Matrix.CreateScale(Zoom) *
+                Matrix.CreateTranslation(screenCenter.X, screenCenter.Y, 0);
+        }
+
+        public Vector2 WorldToScreen(Vector2 worldPosition)
+        {
+            return Vector2.Transform(worldPosition, CurrentTransform);
+        }
+
+        public Vector2 ScreenToWorld(Vector2 screenPosition)
+        {
+            return Vector2.Transform(screenPosition, Matrix.Invert(CurrentTransform));
         }
     }
 }

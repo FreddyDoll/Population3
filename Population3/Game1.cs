@@ -31,6 +31,8 @@ namespace Population3
         private SpriteFont _hudFont;
         private Hud_GasGrid _hud;
 
+        private PlayerCursor _player;
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this)
@@ -71,6 +73,8 @@ namespace Population3
             
             var stats = _gasGrid.GetMassStatsMass();
             _hud.MaxMassPerCell = GameConstants.MaxMassPerCell;
+
+            _player = new(_particles, _gasGrid, _camera);
         }
 
         protected override void Update(GameTime gameTime)
@@ -82,6 +86,9 @@ namespace Population3
             _hud.Update(gamePadState);
 
             var tree = _particleSimulator.Update(_particles,_gasGrid,deltaT);
+
+            _player.Update(gamePadState, tree);
+
             _gasGrid.Update(tree ,deltaT);
 
             for (int i = 0; i < _gasGrid.Width; i++)
@@ -164,9 +171,10 @@ namespace Population3
             }
             #endregion
 
+            _player.Draw(_spriteBatch);
             _spriteBatch.End();
 
-            // Draw the HUD without the camera transform.
+            // no camera transform.
             _spriteBatch.Begin();
             _hud.Draw(_spriteBatch);
             _spriteBatch.End();

@@ -227,16 +227,28 @@ namespace Population3
             Advect(deltaT, oldCells);
         }
 
+
+        public GasCell GetCellFromWorld(Vector2 position)
+        {
+            MapToCell(position, out int cellX, out int cellY);
+            return GetCell(cellX, cellY);
+        }
+
         public Vector2 GetGasAccelerationAt(Vector2 position)
         {
-            // Convert world position to grid indices.
+            int cellX, cellY;
+
+            MapToCell(position, out cellX, out cellY);
+
+            return GetCell(cellX, cellY).LocalAccelerationFromGravity;
+        }
+
+        private void MapToCell(Vector2 position, out int cellX, out int cellY)
+        {
             float relativeX = position.X + GameConstants.SimulationHalfWidth;
             float relativeY = position.Y + GameConstants.SimulationHalfWidth;
-            int cellX = (int)(relativeX / CellSize);
-            int cellY = (int)(relativeY / CellSize);
-
-            // You could improve this using bilinear interpolation if needed.
-            return GetCell(cellX, cellY).LocalAccelerationFromGravity;
+            cellX = (int)(relativeX / CellSize);
+            cellY = (int)(relativeY / CellSize);
         }
 
         /// <summary>
